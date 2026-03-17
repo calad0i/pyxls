@@ -1,5 +1,9 @@
 # pyxls
 
+[![Documentation](https://img.shields.io/github/actions/workflow/status/calad0i/pyxls/sphinx-build.yml?label=doc)](https://calad0i.github.io/pyxls/)
+[![PyPI](https://img.shields.io/pypi/v/xls-python)](https://pypi.org/project/xls-python/)
+[![LGPLv3](https://img.shields.io/badge/License-Apache%202.0-orange)](https://www.apache.org/licenses/LICENSE-2.0)
+
 Python bindings for the [XLS](https://google.github.io/xls/) (eXtensible Logic Synthesis) compiler infrastructure.
 
 > [!NOTE]
