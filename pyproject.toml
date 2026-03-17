@@ -8,7 +8,7 @@ requires = [
 ]
 
 [project]
-name = "pyxls"
+name = "xls-python"
 description = "Python binding for XLS"
 readme = "README.md"
 keywords = [ "high-level synthesis", "HLS Complier", "RTL Generator" ]
@@ -28,11 +28,7 @@ classifiers = [
 ]
 dynamic = [ "version" ]
 dependencies = [ "numpy>=2" ]
-optional-dependencies.docs = [
-  "myst-parser",
-  "sphinx",
-  "sphinx-rtd-theme",
-]
+optional-dependencies.docs = [ "myst-parser", "sphinx", "sphinx-rtd-theme" ]
 optional-dependencies.tests = [
   "pytest",
   "pytest-cov",
