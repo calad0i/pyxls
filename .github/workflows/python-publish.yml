@@ -1,0 +1,95 @@
+name: Upload Python Package to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build_wheels:
+    environment:
+      name: build
+
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v3.3.0
+        env:
+          CIBW_BUILD: "cp31[01234]-*"
+          CIBW_ARCHS_LINUX: "x86_64"
+          CIBW_SKIP: "*-musllinux_*"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_34
+          CIBW_TEST_REQUIRES: "pytest"
+          CIBW_TEST_COMMAND: "pytest -o 'addopts=--import-mode=importlib' {project}/tests"
+          CIBW_BEFORE_BUILD_LINUX: >-
+            curl -fL -o /usr/lib/libxls.so ${{ vars.LIBXLS_URL }} && ldconfig
+          CIBW_CONFIG_SETTINGS: "setup-args=-Dlibxls_dir=/usr/lib"
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: cibw-wheels-${{ matrix.os }}
+          path: ./wheelhouse/*.whl
+
+  build_sdist:
+    name: Build Source Distribution
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      - name: Install build tool
+        run: pip install build
+
+      - name: Build source distribution
+        run: python -m build --sdist --outdir dist -Csetup-args=-Dskip_libxls=true
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: sdist
+          path: ./dist/*.tar.gz
+
+  publish:
+    name: Publish wheels to PyPI
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    environment:
+      name: pypi
+      url: https://pypi.org/p/xls-python
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: cibw-wheels-*
+          path: dist
+          merge-multiple: true
+      - uses: actions/download-artifact@v5
+        with:
+          name: sdist
+
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@release/v1

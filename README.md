@@ -16,7 +16,7 @@ Python bindings for the [XLS](https://google.github.io/xls/) (eXtensible Logic S
 ## Installation
 
 ```bash
-pip install pyxls
+pip install xls-python
 ```
 
 Or from source (requires a C++20 compiler, Meson, and Ninja):

@@ -5,7 +5,7 @@
 When binary wheels are available:
 
 ```bash
-pip install pyxls
+pip install xls-python
 ```
 
 ## From Source
@@ -20,6 +20,10 @@ Building from source requires:
 git clone https://github.com/calad0i/pyxls.git
 cd pyxls
 pip install .
+```
+
+```{note}
+for editable installs, use `pip install --no-build-isolation -e .`, otherwise meson import hooks won't work correctly.
 ```
 
 The build system (`meson-python`) compiles the C++ nanobind extension and links it against the prebuilt `libxls.so` bundled in the repository. No separate XLS build is required.
