@@ -45,7 +45,7 @@ else
     )
   elif fs.exists(_blob_dir / 'libxls.so')
     libxls_dep = declare_dependency(
-      link_args: ['-L' + _blob_dir, '-lxls'],
+      link_args: ['-L' + _blob_dir, '-lxls', '-Wl,-rpath,' + _blob_dir],
       include_directories: include_directories('src/include'),
     )
     install_data(_blob_dir / 'libxls.so', install_dir: _blobs_install_dir)
