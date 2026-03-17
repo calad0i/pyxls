@@ -1,8 +1,8 @@
 name: Documentation
 
 on:
-  # libxls.so missing in CI, skipping for now
-  workflow_dispatch:
+  push:
+    branches: ["master"]
 
 permissions:
   contents: read
