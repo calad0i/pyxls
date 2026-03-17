@@ -8,8 +8,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ._c_api import *
 
-from xls import raw
-from xls._wrap import auto_wrap, maybe_unwrap, maybe_wrap, register_wrapper, wrap_module
+from . import raw
+from ._wrap import auto_wrap, maybe_unwrap, maybe_wrap, register_wrapper, wrap_module
+from .raw import jit_fn_predict as jit_fn_predict
 
 
 def test():
@@ -35,7 +36,7 @@ class Package:
         """Create a new empty Package with the given name."""
         result = raw.ir_builder.xls_package_create(name)
         if hasattr(result, '_raw'):
-            result = result._raw
+            result = result._raw  # type: ignore
         return cls(result)  # type: ignore
 
     @classmethod
@@ -43,7 +44,7 @@ class Package:
         """Parse an IR string into a Package."""
         result = raw.c_api.xls_parse_ir_package(ir, filename or '')
         if hasattr(result, '_raw'):
-            result = result._raw
+            result = result._raw  # type: ignore
         return cls(result)  # type: ignore
 
     def to_string(self) -> str:
@@ -549,10 +550,49 @@ wrap_module(raw.c_api, globals())
 # ---------------------------------------------------------------------------
 # Batch inference / array-level functions from raw (already on raw module)
 # ---------------------------------------------------------------------------
-jit_fn_predict = auto_wrap(raw.jit_fn_predict)
-value_from_array = auto_wrap(raw.value_from_array)
-values_from_array = auto_wrap(raw.values_from_array)
-value_to_array = auto_wrap(raw.value_to_array)
+# jit_fn_predict = auto_wrap(raw.jit_fn_predict)
+
+if TYPE_CHECKING:
+    import numpy as np
+    from numpy.typing import NDArray
+
+    def value_from_array(elements: Sequence[int] | NDArray[np.integer], bit_count: int) -> Value:
+        """Convert a list of ints to an ArrayValue with the given bit count for each sub-value.
+
+        Parameters:
+        ==================
+        elements: A sequence of integers (e.g. list[int] or numpy array) to convert to ArrayValue.
+        each integer will be converted to a bits Value with the specified bit count.
+
+        bit_count: The number of bits to use for each integer element in the resulting ArrayValue.
+
+        Returns: An ArrayValue containing bits Values. Each element is a bits Value with the specified bit count.
+        """
+        ...
+
+    def values_from_array(elements: Sequence[int] | NDArray[np.integer], bit_count: int, word_count: int) -> list[Value]:
+        """Convert a list of ints to a list of bits Values with the given bit count and word count.
+
+        Parameters:
+        ==================
+        elements: A sequence of integers (e.g. list[int] or numpy array) to convert to bits Values.
+        each integer will be converted to a bits Value with the specified bit count and word count.
+
+        bit_count: The number of bits to use for each integer element in the resulting bits Values.
+        word_count: The number of words (groups of bits) to use for each integer element in the resulting bits Values.
+
+        Returns: A list of bits Values. (word_count, bit_count) for each ArrayValue element, number of Values until
+        exhausting the input list.
+        """
+        ...
+
+    def value_to_array(value: Value) -> list[int]:
+        """Convert an ArrayValue to a list of ints."""
+        ...
+else:
+    value_from_array = auto_wrap(raw.value_from_array)
+    values_from_array = auto_wrap(raw.values_from_array)
+    value_to_array = auto_wrap(raw.value_to_array)
 
 # ---------------------------------------------------------------------------
 # Top-level convenience functions with Pythonic names
