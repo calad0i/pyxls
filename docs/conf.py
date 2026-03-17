@@ -47,7 +47,7 @@ autosummary_generate = True
 
 extensions = [
     'myst_parser',
-    'sphinx.ext.autodoc',
+    # 'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx_rtd_theme',

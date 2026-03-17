@@ -9,5 +9,5 @@ help:
 .PHONY: help Makefile
 
 %: Makefile
-	@python -m sphinx.ext.apidoc -f -o autodoc/ ../src/xls
+# 	@python -m sphinx.ext.apidoc -f -o autodoc/ ../src/xls
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

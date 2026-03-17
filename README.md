@@ -7,7 +7,7 @@ Python bindings for the [XLS](https://google.github.io/xls/) (eXtensible Logic S
 
 
 > [!WARNING]
-> pyxls is in early development. The API is not stable and may change without deprecation
+> pyxls is in early development. The API is not stable and may change without deprecation.
 
 
 > [!WARNING]
