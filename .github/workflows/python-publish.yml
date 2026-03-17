@@ -39,7 +39,7 @@ jobs:
             curl -fL -o /usr/lib/libxls.so ${{ vars.LIBXLS_URL }} && ldconfig
           CIBW_CONFIG_SETTINGS: "setup-args=-Dlibxls_dir=/usr/lib"
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: cibw-wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
@@ -65,7 +65,7 @@ jobs:
       - name: Build source distribution
         run: python -m build --sdist --outdir dist -Csetup-args=-Dskip_libxls=true
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: sdist
           path: ./dist/*.tar.gz
@@ -82,12 +82,12 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v8
         with:
           pattern: cibw-wheels-*
           path: dist
           merge-multiple: true
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v8
         with:
           name: sdist
 
