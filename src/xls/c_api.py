@@ -3,14 +3,89 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from ._c_api import *
 
 from . import raw
 from ._wrap import auto_wrap, maybe_unwrap, maybe_wrap, register_wrapper, wrap_module
-from .raw import jit_fn_predict as jit_fn_predict
+
+# ---------------------------------------------------------------------------
+# Enum alias mappings for text proto generation
+# ---------------------------------------------------------------------------
+
+GeneratorKind = Literal['pipeline', 'combinational']
+_GENERATOR_KIND: dict[str, str] = {
+    'pipeline': 'GENERATOR_KIND_PIPELINE',
+    'combinational': 'GENERATOR_KIND_COMBINATIONAL',
+}
+
+IOKind = Literal['flop', 'skid_buffer', 'zero_latency_buffer']
+_IO_KIND: dict[str, str] = {
+    'flop': 'IO_KIND_FLOP',
+    'skid_buffer': 'IO_KIND_SKID_BUFFER',
+    'zero_latency_buffer': 'IO_KIND_ZERO_LATENCY_BUFFER',
+}
+
+RegisterMergeStrategy = Literal['dont_merge', 'identity_only']
+_REGISTER_MERGE_STRATEGY: dict[str, str] = {
+    'dont_merge': 'STRATEGY_DONT_MERGE',
+    'identity_only': 'STRATEGY_IDENTITY_ONLY',
+}
+
+SchedulingStrategy = Literal['sdc', 'asap', 'min_cut', 'random']
+_SCHEDULING_STRATEGY: dict[str, str] = {
+    'sdc': 'SCHEDULER_TYPE_SDC',
+    'asap': 'SCHEDULER_TYPE_ASAP',
+    'min_cut': 'SCHEDULER_TYPE_MIN_CUT',
+    'random': 'SCHEDULER_TYPE_RANDOM',
+}
+
+# Map field names to their enum alias dicts
+_ENUM_FIELDS: dict[str, dict[str, str]] = {
+    'generator': _GENERATOR_KIND,
+    'flop_inputs_kind': _IO_KIND,
+    'flop_outputs_kind': _IO_KIND,
+    'register_merge_strategy': _REGISTER_MERGE_STRATEGY,
+    'scheduling_strategy': _SCHEDULING_STRATEGY,
+}
+
+
+def _build_textproto(fields: dict[str, object]) -> str:
+    """Build a textproto string from a dict of field name → value.
+
+    - ``None`` values are skipped (proto default).
+    - Enum fields are mapped via ``_ENUM_FIELDS``.
+    - ``bool`` -> ``true``/``false``.
+    - ``list`` -> repeated field entries.
+    - ``str`` values are quoted.
+    """
+    parts: list[str] = []
+    for name, value in fields.items():
+        if value is None:
+            continue
+        enum_map = _ENUM_FIELDS.get(name)
+        if enum_map is not None:
+            mapped = enum_map.get(value)  # type: ignore[arg-type]
+            if mapped is None:
+                raise ValueError(f'Invalid value {value!r} for {name}. Choose from: {list(enum_map)}')
+            parts.append(f'{name}: {mapped}')
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, str):
+                    parts.append(f'{name}: "{item}"')
+                else:
+                    parts.append(f'{name}: {item}')
+        elif isinstance(value, bool):
+            parts.append(f'{name}: {"true" if value else "false"}')
+        elif isinstance(value, str):
+            parts.append(f'{name}: "{value}"')
+        elif isinstance(value, (int, float)):
+            parts.append(f'{name}: {value}')
+        else:
+            raise TypeError(f'Unsupported type {type(value).__name__} for field {name}')
+    return ', '.join(parts)
 
 
 def test():
@@ -86,18 +161,312 @@ class Package:
 
     def schedule_and_codegen(
         self,
-        scheduling_options: str = '',
-        codegen_flags: str = 'generator: GENERATOR_KIND_COMBINATIONAL',
+        *,
         with_delay_model: bool = False,
+        # raw textproto
+        scheduling_options_textproto: str | None = None,
+        codegen_flags_textproto: str | None = None,
+        # CodegenFlagsProto fields
+        generator: GeneratorKind | None = 'combinational',
+        top: str | None = None,
+        module_name: str | None = None,
+        input_valid_signal: str | None = None,
+        output_valid_signal: str | None = None,
+        manual_load_enable_signal: str | None = None,
+        flop_inputs: bool | None = None,
+        flop_outputs: bool | None = None,
+        flop_inputs_kind: IOKind | None = None,
+        flop_outputs_kind: IOKind | None = None,
+        flop_single_value_channels: bool | None = None,
+        add_idle_output: bool | None = None,
+        output_port_name: str | None = None,
+        reset: str | None = None,
+        reset_active_low: bool | None = None,
+        reset_asynchronous: bool | None = None,
+        reset_data_path: bool | None = None,
+        use_system_verilog: bool | None = None,
+        separate_lines: bool | None = None,
+        max_inline_depth: int | None = None,
+        gate_format: str | None = None,
+        assert_format: str | None = None,
+        smulp_format: str | None = None,
+        umulp_format: str | None = None,
+        streaming_channel_data_suffix: str | None = None,
+        streaming_channel_valid_suffix: str | None = None,
+        streaming_channel_ready_suffix: str | None = None,
+        ram_configurations: list[str] | None = None,
+        gate_recvs: bool | None = None,
+        array_index_bounds_checking: bool | None = None,
+        register_merge_strategy: RegisterMergeStrategy | None = None,
+        max_trace_verbosity: int | None = None,
+        emit_sv_types: bool | None = None,
+        simulation_macro_name: str | None = None,
+        assertion_macro_names: list[str] | None = None,
+        add_invariant_assertions: bool | None = None,
+        ir_dump_path: str | None = None,
+        # SchedulingOptionsFlagsProto fields
+        pipeline_stages: int | None = None,
+        clock_period_ps: int | None = None,
+        delay_model: str | None = None,
+        clock_margin_percent: int | None = None,
+        period_relaxation_percent: int | None = None,
+        worst_case_throughput: int | None = None,
+        additional_input_delay_ps: int | None = None,
+        additional_output_delay_ps: int | None = None,
+        ffi_fallback_delay_ps: int | None = None,
+        io_constraints: list[str] | None = None,
+        receives_first_sends_last: bool | None = None,
+        mutual_exclusion_z3_rlimit: int | None = None,
+        default_next_value_z3_rlimit: int | None = None,
+        use_fdo: bool | None = None,
+        fdo_iteration_number: int | None = None,
+        fdo_delay_driven_path_number: int | None = None,
+        fdo_fanout_driven_path_number: int | None = None,
+        fdo_refinement_stochastic_ratio: float | None = None,
+        fdo_path_evaluate_strategy: str | None = None,
+        fdo_synthesizer_name: str | None = None,
+        fdo_yosys_path: str | None = None,
+        fdo_sta_path: str | None = None,
+        fdo_synthesis_libraries: str | None = None,
+        fdo_default_driver_cell: str | None = None,
+        fdo_default_load: str | None = None,
+        minimize_clock_on_failure: bool | None = None,
+        multi_proc: bool | None = None,
+        minimize_worst_case_throughput: bool | None = None,
+        recover_after_minimizing_clock: bool | None = None,
+        opt_level: int | None = None,
+        scheduling_strategy: SchedulingStrategy | None = None,
+        merge_on_mutual_exclusion: bool | None = None,
     ) -> ScheduleAndCodegenResult:
         """Schedule and generate Verilog from this package.
 
+        All proto fields default to ``None`` (use proto default). Pass keyword
+        arguments for the fields you want to set.  For advanced/uncommon
+        fields not exposed here, use ``scheduling_options_textproto`` or
+        ``codegen_flags_textproto`` which accept raw textproto strings and
+        override all individual kwargs for their respective proto.
+
         Args:
-            scheduling_options: SchedulingOptionsFlagsProto text (e.g. 'pipeline_stages: 1').
-            codegen_flags: CodegenFlagsProto text (e.g. 'generator: GENERATOR_KIND_COMBINATIONAL').
             with_delay_model: Whether to use a delay model.
+            scheduling_options_textproto: Raw ``SchedulingOptionsFlagsProto``
+                textproto string. When set, overrides all scheduling kwargs.
+            codegen_flags_textproto: Raw ``CodegenFlagsProto`` textproto
+                string. When set, overrides all codegen kwargs.
+
+        Codegen flags (``CodegenFlagsProto``):
+            generator: Generator kind. ``'pipeline'`` or ``'combinational'``
+                (default).
+            top: Name of the top-level function/proc to codegen.
+            module_name: Override the Verilog module name.
+            input_valid_signal: Name of the input valid signal (pipeline only).
+            output_valid_signal: Name of the output valid signal (pipeline
+                only).
+            manual_load_enable_signal: Name of the manual load-enable signal.
+            flop_inputs: Whether to flop input ports.
+            flop_outputs: Whether to flop output ports.
+            flop_inputs_kind: Kind of input flop. ``'flop'``,
+                ``'skid_buffer'``, or ``'zero_latency_buffer'``.
+            flop_outputs_kind: Kind of output flop. ``'flop'``,
+                ``'skid_buffer'``, or ``'zero_latency_buffer'``.
+            flop_single_value_channels: Whether to flop single-value channels.
+            add_idle_output: Whether to add an idle output port.
+            output_port_name: Name of the combinational output port.
+            reset: Name of the reset signal (e.g. ``'rst'``).
+            reset_active_low: Whether reset is active-low.
+            reset_asynchronous: Whether reset is asynchronous.
+            reset_data_path: Whether to reset the data path registers.
+            use_system_verilog: Emit SystemVerilog instead of plain Verilog.
+            separate_lines: Put each expression on a separate line.
+            max_inline_depth: Maximum depth of inlined expressions.
+            gate_format: Format string for gate operations. Placeholders:
+                ``{condition}``/``{input0}`` (gate condition),
+                ``{input}``/``{input1}`` (data input), ``{output}`` (result),
+                ``{width}`` (bit width).
+                Example: ``'my_gate {output} [{width}-1:0] = {condition} & {input}'``.
+            assert_format: Format string for assertions. Placeholders:
+                ``{message}``, ``{condition}``, ``{label}`` (assert label),
+                ``{clk}`` (clock signal), ``{rst}`` (reset signal).
+                Example: ``'MY_ASSERT({condition}, {message})'``.
+            smulp_format: Format string for signed partial-multiply modules.
+                Placeholders: ``{input0}``, ``{input1}``,
+                ``{input0_width}``, ``{input1_width}``, ``{output}``,
+                ``{output_width}``. Used for instantiating smulp IP cores.
+            umulp_format: Format string for unsigned partial-multiply modules.
+                Same placeholders as ``smulp_format``.
+            streaming_channel_data_suffix: Suffix appended to channel names
+                for data ports (default ``""``).
+            streaming_channel_valid_suffix: Suffix appended to channel names
+                for valid signals (default ``"_vld"``).
+            streaming_channel_ready_suffix: Suffix appended to channel names
+                for ready signals (default ``"_rdy"``).
+            ram_configurations: External RAM integration configs. Format for
+                1RW: ``'name:1RW:req_channel:resp_channel:wr_comp_channel[:latency]'``.
+                Format for 1R1W:
+                ``'name:1R1W:rd_req:rd_resp:wr_req:wr_comp[:latency]'``.
+                Latency defaults to 1.
+            gate_recvs: Whether to gate receive operations.
+            array_index_bounds_checking: Whether to add bounds checking for
+                array indexing.
+            register_merge_strategy: Strategy for merging registers.
+                ``'dont_merge'`` or ``'identity_only'``.
+            max_trace_verbosity: Maximum verbosity level for trace statements.
+            emit_sv_types: Emit annotated SystemVerilog types for arguments.
+            simulation_macro_name: Verilog macro name guarding
+                simulation-only constructs (e.g. ``$display``). Default
+                ``"SIMULATION"``. Prefix with ``'!'`` to use ``ifndef``
+                instead of ``ifdef``.
+            assertion_macro_names: Verilog macro names guarding assertions
+                with ``ifdef``. Default ``["ASSERT_ON"]``. Prefix an entry
+                with ``'!'`` to use ``ifndef`` instead.
+            add_invariant_assertions: Whether to emit runtime invariant
+                assertions (e.g. one-hot selector checks). Default true.
+            ir_dump_path: Path to dump intermediate IR during block
+                conversion (debugging).
+
+        Scheduling options (``SchedulingOptionsFlagsProto``):
+            pipeline_stages: Number of pipeline stages.
+            clock_period_ps: Target clock period in picoseconds.
+            delay_model: Delay model name (e.g. ``'unit'``, or a registered
+                model from the delay estimator registry).
+            clock_margin_percent: Percentage of clock period to reserve as
+                margin.
+            period_relaxation_percent: Percentage by which the clock period
+                may be relaxed.
+            worst_case_throughput: Worst-case throughput target (in cycles per
+                output).
+            additional_input_delay_ps: Extra input delay in picoseconds.
+            additional_output_delay_ps: Extra output delay in picoseconds.
+            ffi_fallback_delay_ps: Fallback delay for FFI nodes in
+                picoseconds.
+            io_constraints: I/O ordering constraints. Format:
+                ``'chan_a:send:chan_b:recv:min_latency:max_latency'``.
+                Use ``'none'`` for unbounded min/max.
+                Example: ``['foo:send:bar:recv:1:3']``.
+            receives_first_sends_last: Force receives into the first stage
+                and sends into the last stage.
+            mutual_exclusion_z3_rlimit: Z3 resource limit for mutual
+                exclusion analysis.
+            default_next_value_z3_rlimit: Z3 resource limit for
+                default-next-value analysis.
+            use_fdo: Enable feedback-directed optimization.
+            fdo_iteration_number: Number of FDO iterations.
+            fdo_delay_driven_path_number: Number of delay-driven paths for
+                FDO.
+            fdo_fanout_driven_path_number: Number of fanout-driven paths for
+                FDO.
+            fdo_refinement_stochastic_ratio: Stochastic ratio for FDO
+                refinement (0.0 to 1.0).
+            fdo_path_evaluate_strategy: FDO path evaluation strategy.
+                ``'path'``, ``'cone'``, or ``'window'`` (default).
+            fdo_synthesizer_name: Synthesis backend for FDO. Currently only
+                ``'yosys'`` (default) is supported.
+            fdo_yosys_path: Path to the yosys binary for FDO.
+            fdo_sta_path: Path to the OpenSTA binary for FDO.
+            fdo_synthesis_libraries: Synthesis and STA library files for FDO
+                (e.g. ``.lib`` files).
+            fdo_default_driver_cell: Cell assumed to drive primary inputs
+                in FDO (e.g. ``'BUF_X4'``).
+            fdo_default_load: Cell assumed to be driven by primary outputs
+                in FDO (e.g. ``'BUF_X4'``).
+            minimize_clock_on_failure: Try to minimize clock period when
+                scheduling fails.
+            multi_proc: Enable multi-proc scheduling.
+            minimize_worst_case_throughput: Minimize worst-case throughput.
+            recover_after_minimizing_clock: Recover the original clock period
+                after minimization.
+            opt_level: Optimization level for scheduling.
+            scheduling_strategy: Scheduling algorithm. ``'sdc'`` (default),
+                ``'asap'``, ``'min_cut'``, or ``'random'``.
+            merge_on_mutual_exclusion: Merge mutually exclusive operations.
         """
-        result = raw.c_api.xls_schedule_and_codegen_package(self._raw, scheduling_options, codegen_flags, with_delay_model)
+
+        if codegen_flags_textproto is None:
+            codegen_flags_textproto = _build_textproto(
+                {
+                    'generator': generator,
+                    'top': top,
+                    'module_name': module_name,
+                    'input_valid_signal': input_valid_signal,
+                    'output_valid_signal': output_valid_signal,
+                    'manual_load_enable_signal': manual_load_enable_signal,
+                    'flop_inputs': flop_inputs,
+                    'flop_outputs': flop_outputs,
+                    'flop_inputs_kind': flop_inputs_kind,
+                    'flop_outputs_kind': flop_outputs_kind,
+                    'flop_single_value_channels': flop_single_value_channels,
+                    'add_idle_output': add_idle_output,
+                    'output_port_name': output_port_name,
+                    'reset': reset,
+                    'reset_active_low': reset_active_low,
+                    'reset_asynchronous': reset_asynchronous,
+                    'reset_data_path': reset_data_path,
+                    'use_system_verilog': use_system_verilog,
+                    'separate_lines': separate_lines,
+                    'max_inline_depth': max_inline_depth,
+                    'gate_format': gate_format,
+                    'assert_format': assert_format,
+                    'smulp_format': smulp_format,
+                    'umulp_format': umulp_format,
+                    'streaming_channel_data_suffix': streaming_channel_data_suffix,
+                    'streaming_channel_valid_suffix': streaming_channel_valid_suffix,
+                    'streaming_channel_ready_suffix': streaming_channel_ready_suffix,
+                    'ram_configurations': ram_configurations,
+                    'gate_recvs': gate_recvs,
+                    'array_index_bounds_checking': array_index_bounds_checking,
+                    'register_merge_strategy': register_merge_strategy,
+                    'max_trace_verbosity': max_trace_verbosity,
+                    'emit_sv_types': emit_sv_types,
+                    'simulation_macro_name': simulation_macro_name,
+                    'assertion_macro_names': assertion_macro_names,
+                    'add_invariant_assertions': add_invariant_assertions,
+                    'ir_dump_path': ir_dump_path,
+                }
+            )
+
+        if scheduling_options_textproto is None:
+            scheduling_options_textproto = _build_textproto(
+                {
+                    'pipeline_stages': pipeline_stages,
+                    'clock_period_ps': clock_period_ps,
+                    'delay_model': delay_model,
+                    'clock_margin_percent': clock_margin_percent,
+                    'period_relaxation_percent': period_relaxation_percent,
+                    'worst_case_throughput': worst_case_throughput,
+                    'additional_input_delay_ps': additional_input_delay_ps,
+                    'additional_output_delay_ps': additional_output_delay_ps,
+                    'ffi_fallback_delay_ps': ffi_fallback_delay_ps,
+                    'io_constraints': io_constraints,
+                    'receives_first_sends_last': receives_first_sends_last,
+                    'mutual_exclusion_z3_rlimit': mutual_exclusion_z3_rlimit,
+                    'default_next_value_z3_rlimit': default_next_value_z3_rlimit,
+                    'use_fdo': use_fdo,
+                    'fdo_iteration_number': fdo_iteration_number,
+                    'fdo_delay_driven_path_number': fdo_delay_driven_path_number,
+                    'fdo_fanout_driven_path_number': fdo_fanout_driven_path_number,
+                    'fdo_refinement_stochastic_ratio': fdo_refinement_stochastic_ratio,
+                    'fdo_path_evaluate_strategy': fdo_path_evaluate_strategy,
+                    'fdo_synthesizer_name': fdo_synthesizer_name,
+                    'fdo_yosys_path': fdo_yosys_path,
+                    'fdo_sta_path': fdo_sta_path,
+                    'fdo_synthesis_libraries': fdo_synthesis_libraries,
+                    'fdo_default_driver_cell': fdo_default_driver_cell,
+                    'fdo_default_load': fdo_default_load,
+                    'minimize_clock_on_failure': minimize_clock_on_failure,
+                    'multi_proc': multi_proc,
+                    'minimize_worst_case_throughput': minimize_worst_case_throughput,
+                    'recover_after_minimizing_clock': recover_after_minimizing_clock,
+                    'opt_level': opt_level,
+                    'scheduling_strategy': scheduling_strategy,
+                    'merge_on_mutual_exclusion': merge_on_mutual_exclusion,
+                }
+            )
+
+        result = raw.c_api.xls_schedule_and_codegen_package(
+            self._raw,
+            scheduling_options_textproto,
+            codegen_flags_textproto,
+            with_delay_model,
+        )
         return maybe_wrap(result)
 
     def get_bits_type(self, bit_count: int) -> Type:
@@ -305,13 +674,6 @@ class Value:
         """Create an array Value from a list of element Values."""
         raw_elems = [maybe_unwrap(e) for e in elems]
         result = raw.c_api.xls_value_make_array(raw_elems)
-        # The raw API takes count; use from_bits or interpret path if needed.
-        # Actually xls_value_make_array takes a count argument (pre-allocated).
-        # We need a different approach - use interpret with literal or value_from_bits.
-        # Per pyi: xls_value_make_array(arg: int) -> object
-        # This creates an empty array of size n, elements filled separately?
-        # Let's check: the raw function signature says arg: int.
-        # For now return a wrapped result from the raw call.
         return maybe_wrap(result)
 
     @classmethod
@@ -550,7 +912,7 @@ wrap_module(raw.c_api, globals())
 # ---------------------------------------------------------------------------
 # Batch inference / array-level functions from raw (already on raw module)
 # ---------------------------------------------------------------------------
-# jit_fn_predict = auto_wrap(raw.jit_fn_predict)
+#
 
 if TYPE_CHECKING:
     import numpy as np
@@ -589,10 +951,30 @@ if TYPE_CHECKING:
     def value_to_array(value: Value) -> list[int]:
         """Convert an ArrayValue to a list of ints."""
         ...
+
+    def jit_fn_predict(
+        fn_jit: FunctionJit, input: NDArray[np.int64], bit_count: int, in_word_count: int, out_word_count: int
+    ) -> NDArray[np.int64]:
+        """Run a JIT-compiled function on a numpy integer array and report the output in the same format. Both input and output must be in 1D arrays of numbers (2D array of bits).
+
+        Parameters:
+        ==================
+        fn_jit: A JIT-compiled function (FunctionJit) to run on the input array. The function should accept and return values both in array format compatible with the input and output specifications.
+
+        input: A numpy array of int64 of size (N * in_word_count) containing the input data to be processed by the JIT function. The shape is disregarded and will always be interpreted as (N, in_word_count) in the row-major order.
+
+        bit_count: The number of bits of each number in the input array.
+
+        in_word_count: The number of words (groups of bits/number of elements) for each input.
+
+        out_word_count: The number of words (groups of bits/number of elements) for each output.
+        """
+        ...
 else:
     value_from_array = auto_wrap(raw.value_from_array)
     values_from_array = auto_wrap(raw.values_from_array)
     value_to_array = auto_wrap(raw.value_to_array)
+    jit_fn_predict = auto_wrap(raw.jit_fn_predict)
 
 # ---------------------------------------------------------------------------
 # Top-level convenience functions with Pythonic names

@@ -182,14 +182,23 @@ def test_package_get_type_for_value():
 def test_package_schedule_and_codegen():
     pkg = c_api.Package.parse_ir(SAMPLE_IR)
     # Use combinational generator (no pipeline, no delay model needed)
-    result = pkg.schedule_and_codegen(
-        scheduling_options='',
-        codegen_flags='generator: GENERATOR_KIND_COMBINATIONAL',
-    )
+    result = pkg.schedule_and_codegen(generator='combinational')
     assert isinstance(result, c_api.ScheduleAndCodegenResult)
     verilog = result.get_verilog_text()
     assert isinstance(verilog, str)
     assert len(verilog) > 0
+    assert 'module add' in verilog
+
+
+def test_package_schedule_and_codegen_textproto_fallback():
+    pkg = c_api.Package.parse_ir(SAMPLE_IR)
+    # Raw textproto fallback still works
+    result = pkg.schedule_and_codegen(
+        scheduling_options_textproto='',
+        codegen_flags_textproto='generator: GENERATOR_KIND_COMBINATIONAL',
+    )
+    assert isinstance(result, c_api.ScheduleAndCodegenResult)
+    verilog = result.get_verilog_text()
     assert 'module add' in verilog
 
 

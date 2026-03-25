@@ -134,17 +134,15 @@ module add(
 endmodule
 ```
 
-Alternatively, use can use the `Package`'s `schedule_and_codegen` method to specify scheduling options and codegen flags:
+Alternatively, use the `Package`'s `schedule_and_codegen` method with Pythonic keyword arguments:
 
 ```python
-from xls.c_api import xls_schedule_and_codegen_result_get_verilog_text
-
 result = pkg.schedule_and_codegen(
-    scheduling_options='delay_model: "asap7", pipeline_stages: 2',
-    codegen_flags='generator: GENERATOR_KIND_PIPELINE'
+    generator='pipeline',
+    delay_model='asap7',
+    pipeline_stages=2,
 )
-
-verilog = xls_schedule_and_codegen_result_get_verilog_text(result)
+verilog = result.get_verilog_text()
 print(verilog)
 ```
 module add(
