@@ -38,8 +38,8 @@ jobs:
           CIBW_TEST_COMMAND: "pytest -o 'addopts=--import-mode=importlib' {project}/tests"
           CIBW_BEFORE_BUILD_LINUX: |
             URL="${{ vars.LIBXLS_URL }}/$(git describe --tags --exact-match).so"
-            curl -fL -o /usr/lib/libxls.so "$URL"
-          CIBW_CONFIG_SETTINGS: "setup-args=-Dlibxls_dir=/usr/lib"
+            mkdir -p src/xls/_blob
+            curl -fL -o src/xls/_blob/libxls.so "$URL"
 
       - uses: actions/upload-artifact@v7
         with:
