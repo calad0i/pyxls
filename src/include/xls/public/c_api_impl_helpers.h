@@ -32,50 +32,41 @@
 
 namespace xls {
 
-    // Converts a C-API-given format preference value into the XLS internal enum
-    // -- since these values can be out of normal enum class range when passed
-    // to the API, we validate here.
-    bool FormatPreferenceFromC(
-        xls_format_preference c_pref,
-        xls::FormatPreference *cpp_pref,
-        char **error_out
-    );
+// Converts a C-API-given format preference value into the XLS internal enum --
+// since these values can be out of normal enum class range when passed to the
+// API, we validate here.
+bool FormatPreferenceFromC(xls_format_preference c_pref,
+                           xls::FormatPreference* cpp_pref, char** error_out);
 
-    // Helper function that we can use to adapt to the common C API pattern when
-    // we're returning an `absl::StatusOr<std::string>` value.
-    bool ReturnStringHelper(
-        absl::StatusOr<std::string> &to_return,
-        char **error_out,
-        char **value_out
-    );
+// Helper function that we can use to adapt to the common C API pattern when
+// we're returning an `absl::StatusOr<std::string>` value.
+bool ReturnStringHelper(absl::StatusOr<std::string>& to_return,
+                        char** error_out, char** value_out);
 
-    // Returns the payload of `s` as a C string allocated by libc and owned by
-    // the caller.
-    char *ToOwnedCString(std::string_view s);
+// Returns the payload of `s` as a C string allocated by libc and owned by the
+// caller.
+char* ToOwnedCString(std::string_view s);
 
-    // Converts a C++ vector of strings into a C array of strings and a count of
-    // the number of strings.
-    //
-    // Precondition: `c_out` and `c_out_count` must not be `nullptr`.
-    //
-    // Note: if the `cpp` span is empty, then `c_out` will be set to a `nullptr`
-    // (and `c_out_count` will be set to 0) so callers should not rely on the
-    // value of `c_out` to determine if the conversion was successful.
-    void ToOwnedCStrings(
-        absl::Span<const std::string> cpp,
-        char ***c_out,
-        size_t *c_out_count
-    );
+// Converts a C++ vector of strings into a C array of strings and a count of the
+// number of strings.
+//
+// Precondition: `c_out` and `c_out_count` must not be `nullptr`.
+//
+// Note: if the `cpp` span is empty, then `c_out` will be set to a `nullptr`
+// (and `c_out_count` will be set to 0) so callers should not rely on the value
+// of `c_out` to determine if the conversion was successful.
+void ToOwnedCStrings(absl::Span<const std::string> cpp, char*** c_out,
+                     size_t* c_out_count);
 
-    // Converts the C representation of filesystem search paths into a C++
-    // representation.
-    std::vector<std::filesystem::path>
-    ToCppPaths(const char *paths[], size_t paths_count);
+// Converts the C representation of filesystem search paths into a C++
+// representation.
+std::vector<std::filesystem::path> ToCppPaths(const char* paths[],
+                                              size_t paths_count);
 
-    // Converts the C representation of warnings into a C++ representation.
-    std::vector<std::string_view>
-    ToCppStringViews(const char *strings[], size_t strings_count);
+// Converts the C representation of warnings into a C++ representation.
+std::vector<std::string_view> ToCppStringViews(const char* strings[],
+                                               size_t strings_count);
 
-} // namespace xls
+}  // namespace xls
 
-#endif // XLS_PUBLIC_C_API_IMPL_HELPERS_H_
+#endif  // XLS_PUBLIC_C_API_IMPL_HELPERS_H_

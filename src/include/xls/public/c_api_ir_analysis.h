@@ -15,8 +15,8 @@
 #ifndef XLS_PUBLIC_C_API_IR_ANALYSIS_H_
 #define XLS_PUBLIC_C_API_IR_ANALYSIS_H_
 
-#include <stddef.h> // NOLINT(modernize-deprecated-headers)
-#include <stdint.h> // NOLINT(modernize-deprecated-headers)
+#include <stddef.h>  // NOLINT(modernize-deprecated-headers)
+#include <stdint.h>  // NOLINT(modernize-deprecated-headers)
 
 // Protected C API for IR analysis (known bits / range information).
 //
@@ -31,114 +31,93 @@
 // C API does not yet expose a node enumeration facility; callers are expected
 // to obtain node ids out-of-band (e.g. from IR text dumps).
 
-extern "C"
-{
-    // Forward declarations for types defined in other C API headers.
-    struct xls_bits;
-    struct xls_package;
+extern "C" {
 
-    // Selects how much work is done to compute ranges.
-    //
-    // More expensive levels may produce tighter (more precise) ranges.
-    typedef int32_t xls_ir_analysis_level;
-    enum {
-        // Fast analysis level (default).
-        xls_ir_analysis_level_fast = 0,
-        // Enables context-sensitive range analysis for `sel` nodes.
-        xls_ir_analysis_level_range_with_context = 1,
-    };
+// Forward declarations for types defined in other C API headers.
+struct xls_bits;
+struct xls_package;
 
-    // Options for creating an IR analysis handle.
-    struct xls_ir_analysis_options {
-        xls_ir_analysis_level level;
-    };
+// Selects how much work is done to compute ranges.
+//
+// More expensive levels may produce tighter (more precise) ranges.
+typedef int32_t xls_ir_analysis_level;
+enum {
+  // Fast analysis level (default).
+  xls_ir_analysis_level_fast = 0,
+  // Enables context-sensitive range analysis for `sel` nodes.
+  xls_ir_analysis_level_range_with_context = 1,
+};
 
-    // Opaque analysis handle. Owns analysis state and (optionally) the IR
-    // package.
-    struct xls_ir_analysis;
+// Options for creating an IR analysis handle.
+struct xls_ir_analysis_options {
+  xls_ir_analysis_level level;
+};
 
-    // Opaque interval set handle (bits-typed values only in this API).
-    struct xls_interval_set;
+// Opaque analysis handle. Owns analysis state and (optionally) the IR package.
+struct xls_ir_analysis;
 
-    // Creates an analysis handle from an existing package.
-    //
-    // Precondition: `p` must have a top function base set.
-    //
-    // Note: The returned analysis handle does not take ownership of `p`; the
-    // package must outlive the analysis handle.
-    bool xls_ir_analysis_create_from_package(
-        struct xls_package *p,
-        char **error_out,
-        struct xls_ir_analysis **out
-    );
+// Opaque interval set handle (bits-typed values only in this API).
+struct xls_interval_set;
 
-    // Creates an analysis handle from an existing package with options.
-    //
-    // Precondition: `p` must have a top function base set.
-    //
-    // If `options` is null, defaults are used.
-    bool xls_ir_analysis_create_from_package_with_options(
-        struct xls_package *p,
-        const struct xls_ir_analysis_options *options,
-        char **error_out,
-        struct xls_ir_analysis **out
-    );
+// Creates an analysis handle from an existing package.
+//
+// Precondition: `p` must have a top function base set.
+//
+// Note: The returned analysis handle does not take ownership of `p`; the
+// package must outlive the analysis handle.
+bool xls_ir_analysis_create_from_package(struct xls_package* p,
+                                         char** error_out,
+                                         struct xls_ir_analysis** out);
 
-    void xls_ir_analysis_free(struct xls_ir_analysis *a);
+// Creates an analysis handle from an existing package with options.
+//
+// Precondition: `p` must have a top function base set.
+//
+// If `options` is null, defaults are used.
+bool xls_ir_analysis_create_from_package_with_options(
+    struct xls_package* p, const struct xls_ir_analysis_options* options,
+    char** error_out, struct xls_ir_analysis** out);
 
-    // Returns known-bits information for the bits-typed node with the given id.
-    //
-    // On success, returns a `known_mask` and `known_value` pair as `xls_bits*`:
-    // - `known_mask` has a 1 bit where the corresponding bit in the node is
-    // known.
-    // - `known_value` holds the known bit values (and zero in unknown
-    // positions).
-    //
-    // The returned `xls_bits*` values are owned by the caller and must be freed
-    // via `xls_bits_free`.
-    //
-    // Returns an error if `node_id` is not found, or if the node is not
-    // bits-typed.
-    bool xls_ir_analysis_get_known_bits_for_node_id(
-        const struct xls_ir_analysis *a,
-        int64_t node_id,
-        char **error_out,
-        struct xls_bits **known_mask_out,
-        struct xls_bits **known_value_out
-    );
+void xls_ir_analysis_free(struct xls_ir_analysis* a);
 
-    // Returns range information for the bits-typed node with the given id.
-    //
-    // The result is returned as an opaque interval set. Use the interval set
-    // APIs below to inspect it.
-    //
-    // Returns an error if `node_id` is not found, or if the node is not
-    // bits-typed.
-    bool xls_ir_analysis_get_intervals_for_node_id(
-        const struct xls_ir_analysis *a,
-        int64_t node_id,
-        char **error_out,
-        struct xls_interval_set **intervals_out
-    );
+// Returns known-bits information for the bits-typed node with the given id.
+//
+// On success, returns a `known_mask` and `known_value` pair as `xls_bits*`:
+// - `known_mask` has a 1 bit where the corresponding bit in the node is known.
+// - `known_value` holds the known bit values (and zero in unknown positions).
+//
+// The returned `xls_bits*` values are owned by the caller and must be freed via
+// `xls_bits_free`.
+//
+// Returns an error if `node_id` is not found, or if the node is not bits-typed.
+bool xls_ir_analysis_get_known_bits_for_node_id(
+    const struct xls_ir_analysis* a, int64_t node_id, char** error_out,
+    struct xls_bits** known_mask_out, struct xls_bits** known_value_out);
 
-    // Interval set inspection APIs.
-    int64_t
-    xls_interval_set_get_interval_count(const struct xls_interval_set *s);
+// Returns range information for the bits-typed node with the given id.
+//
+// The result is returned as an opaque interval set. Use the interval set APIs
+// below to inspect it.
+//
+// Returns an error if `node_id` is not found, or if the node is not bits-typed.
+bool xls_ir_analysis_get_intervals_for_node_id(
+    const struct xls_ir_analysis* a, int64_t node_id, char** error_out,
+    struct xls_interval_set** intervals_out);
 
-    // Returns the inclusive bounds of the i-th interval.
-    //
-    // The returned bounds are owned by the caller and must be freed via
-    // `xls_bits_free`.
-    bool xls_interval_set_get_interval_bounds(
-        const struct xls_interval_set *s,
-        int64_t i,
-        char **error_out,
-        struct xls_bits **lo_out,
-        struct xls_bits **hi_out
-    );
+// Interval set inspection APIs.
+int64_t xls_interval_set_get_interval_count(const struct xls_interval_set* s);
 
-    void xls_interval_set_free(struct xls_interval_set *s);
+// Returns the inclusive bounds of the i-th interval.
+//
+// The returned bounds are owned by the caller and must be freed via
+// `xls_bits_free`.
+bool xls_interval_set_get_interval_bounds(const struct xls_interval_set* s,
+                                          int64_t i, char** error_out,
+                                          struct xls_bits** lo_out,
+                                          struct xls_bits** hi_out);
 
-} // extern "C"
+void xls_interval_set_free(struct xls_interval_set* s);
 
-#endif // XLS_PUBLIC_C_API_IR_ANALYSIS_H_
+}  // extern "C"
+
+#endif  // XLS_PUBLIC_C_API_IR_ANALYSIS_H_

@@ -15,25 +15,25 @@
 #ifndef XLS_PUBLIC_C_API_FORMAT_PREFERENCE_H_
 #define XLS_PUBLIC_C_API_FORMAT_PREFERENCE_H_
 
-#include <stdint.h> // NOLINT(modernize-deprecated-headers)
+#include <stdint.h>  // NOLINT(modernize-deprecated-headers)
 
-extern "C"
-{
-    // Note: We define the format preference enum with a fixed width integer
-    // type for clarity of the exposed ABI.
-    typedef int32_t xls_format_preference;
-    enum {
-        xls_format_preference_default,
-        xls_format_preference_binary,
-        xls_format_preference_signed_decimal,
-        xls_format_preference_unsigned_decimal,
-        xls_format_preference_hex,
-        xls_format_preference_plain_binary,
-        xls_format_preference_plain_hex,
-        xls_format_preference_zero_padded_binary,
-        xls_format_preference_zero_padded_hex,
-    };
+extern "C" {
 
-} // extern "C"
+// Note: We define the format preference enum with a fixed width integer type
+// for clarity of the exposed ABI.
+typedef int32_t xls_format_preference;
+enum {
+  xls_format_preference_default,
+  xls_format_preference_binary,
+  xls_format_preference_signed_decimal,
+  xls_format_preference_unsigned_decimal,
+  xls_format_preference_hex,
+  xls_format_preference_plain_binary,
+  xls_format_preference_plain_hex,
+  xls_format_preference_zero_padded_binary,
+  xls_format_preference_zero_padded_hex,
+};
 
-#endif // XLS_PUBLIC_C_API_FORMAT_PREFERENCE_H_
+}  // extern "C"
+
+#endif  // XLS_PUBLIC_C_API_FORMAT_PREFERENCE_H_
