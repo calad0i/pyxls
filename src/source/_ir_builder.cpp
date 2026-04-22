@@ -14,9 +14,8 @@ using namespace nb::literals;
            _BValue &lhs,                                                       \
            _BValue &rhs,                                                       \
            nb::object name) -> _BValue {                                       \
-            const char *n = name.is_none()                                     \
-                                ? nullptr                                      \
-                                : nb::cast<std::string>(name).c_str();         \
+            const char *n =                                                    \
+                name.is_none() ? nullptr : nb::cast<const char *>(name);       \
             return _BValue(c_fn(bb.ptr, lhs.ptr.get(), rhs.ptr.get(), n));     \
         },                                                                     \
         "builder"_a,                                                           \
@@ -29,9 +28,8 @@ using namespace nb::literals;
     m.def(                                                                     \
         py_name,                                                               \
         [](const _BuilderBase &bb, _BValue &val, nb::object name) -> _BValue { \
-            const char *n = name.is_none()                                     \
-                                ? nullptr                                      \
-                                : nb::cast<std::string>(name).c_str();         \
+            const char *n =                                                    \
+                name.is_none() ? nullptr : nb::cast<const char *>(name);       \
             return _BValue(c_fn(bb.ptr, val.ptr.get(), n));                    \
         },                                                                     \
         "builder"_a,                                                           \
@@ -297,7 +295,7 @@ void bind_ir_builder(nb::module_ &m) {
            const _Value &val,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             return _BValue(xls_builder_base_add_literal(
                 bb.ptr, const_cast<xls_value *>(val.ptr.get()), n
             ));
@@ -313,7 +311,7 @@ void bind_ir_builder(nb::module_ &m) {
            std::vector<_BValue *> operands,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             std::vector<xls_bvalue *> c_ops;
             for (auto *v : operands)
                 c_ops.push_back(v->ptr.get());
@@ -332,7 +330,7 @@ void bind_ir_builder(nb::module_ &m) {
            std::vector<_BValue *> operands,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             std::vector<xls_bvalue *> c_ops;
             for (auto *v : operands)
                 c_ops.push_back(v->ptr.get());
@@ -351,7 +349,7 @@ void bind_ir_builder(nb::module_ &m) {
            std::vector<_BValue *> deps,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             std::vector<xls_bvalue *> c_deps;
             for (auto *v : deps)
                 c_deps.push_back(v->ptr.get());
@@ -371,7 +369,7 @@ void bind_ir_builder(nb::module_ &m) {
            std::vector<_BValue *> elements,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             std::vector<xls_bvalue *> c_elems;
             for (auto *v : elements)
                 c_elems.push_back(v->ptr.get());
@@ -392,7 +390,7 @@ void bind_ir_builder(nb::module_ &m) {
            int64_t index,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             return _BValue(xls_builder_base_add_tuple_index(
                 bb.ptr, tuple.ptr.get(), index, n
             ));
@@ -411,7 +409,7 @@ void bind_ir_builder(nb::module_ &m) {
            bool assumed_in_bounds,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             std::vector<xls_bvalue *> c_idx;
             for (auto *v : indices)
                 c_idx.push_back(v->ptr.get());
@@ -439,7 +437,7 @@ void bind_ir_builder(nb::module_ &m) {
            int64_t width,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             return _BValue(xls_builder_base_add_array_slice(
                 bb.ptr, array.ptr.get(), start.ptr.get(), width, n
             ));
@@ -460,7 +458,7 @@ void bind_ir_builder(nb::module_ &m) {
            bool assumed_in_bounds,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             std::vector<xls_bvalue *> c_idx;
             for (auto *v : indices)
                 c_idx.push_back(v->ptr.get());
@@ -488,7 +486,7 @@ void bind_ir_builder(nb::module_ &m) {
            std::vector<_BValue *> arrays,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             std::vector<xls_bvalue *> c_arrs;
             for (auto *v : arrays)
                 c_arrs.push_back(v->ptr.get());
@@ -508,7 +506,7 @@ void bind_ir_builder(nb::module_ &m) {
            int64_t new_bit_count,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             return _BValue(xls_builder_base_add_sign_extend(
                 bb.ptr, val.ptr.get(), new_bit_count, n
             ));
@@ -526,7 +524,7 @@ void bind_ir_builder(nb::module_ &m) {
            int64_t new_bit_count,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             return _BValue(xls_builder_base_add_zero_extend(
                 bb.ptr, val.ptr.get(), new_bit_count, n
             ));
@@ -545,7 +543,7 @@ void bind_ir_builder(nb::module_ &m) {
            int64_t width,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             return _BValue(xls_builder_base_add_bit_slice(
                 bb.ptr, val.ptr.get(), start, width, n
             ));
@@ -565,7 +563,7 @@ void bind_ir_builder(nb::module_ &m) {
            _BValue &update_value,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             return _BValue(xls_builder_base_add_bit_slice_update(
                 bb.ptr, arg.ptr.get(), start.ptr.get(), update_value.ptr.get(), n
             ));
@@ -585,7 +583,7 @@ void bind_ir_builder(nb::module_ &m) {
            int64_t width,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             return _BValue(xls_builder_base_add_dynamic_bit_slice(
                 bb.ptr, val.ptr.get(), start.ptr.get(), width, n
             ));
@@ -604,7 +602,7 @@ void bind_ir_builder(nb::module_ &m) {
            nb::object width,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             int64_t w_val;
             int64_t *w_ptr = nullptr;
             if (!width.is_none()) {
@@ -629,7 +627,7 @@ void bind_ir_builder(nb::module_ &m) {
            nb::object default_value,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             std::vector<xls_bvalue *> c_cases;
             for (auto *v : cases)
                 c_cases.push_back(v->ptr.get());
@@ -654,7 +652,7 @@ void bind_ir_builder(nb::module_ &m) {
            bool lsb_is_priority,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             return _BValue(xls_builder_base_add_one_hot(
                 bb.ptr, input.ptr.get(), lsb_is_priority, n
             ));
@@ -672,7 +670,7 @@ void bind_ir_builder(nb::module_ &m) {
            std::vector<_BValue *> cases,
            nb::object name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<std::string>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             std::vector<xls_bvalue *> c_cases;
             for (auto *v : cases)
                 c_cases.push_back(v->ptr.get());
@@ -694,7 +692,7 @@ void bind_ir_builder(nb::module_ &m) {
            _BValue &default_value,
            nb::typed<nb::object, nb::str> name) -> _BValue {
             const char *n =
-                name.is_none() ? nullptr : nb::cast<nb::str>(name).c_str();
+                name.is_none() ? nullptr : nb::cast<const char *>(name);
             std::vector<xls_bvalue *> c_cases;
             for (auto *v : cases)
                 c_cases.push_back(v->ptr.get());

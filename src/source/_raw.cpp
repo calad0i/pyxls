@@ -255,7 +255,9 @@ NB_MODULE(raw, m) {
         m, "DslxInvocationCalleeDataArray"
     )
         .def(nb::init<>());
-    nb::class_<_DslxInvocationCalleeData>(m, "DslxInvocationCalleeData");
+    nb::class_<_DslxInvocationCalleeData>(
+        m, "DslxInvocationCalleeData"
+    ); // NOLINT(bugprone-unused-raii)
     nb::class_<_DslxInvocationData>(m, "DslxInvocationData").def(nb::init<>());
     nb::class_<_DslxModuleMember>(m, "DslxModuleMember").def(nb::init<>());
     nb::class_<_DslxTypeDim>(m, "DslxTypeDim").def(nb::init<>());
