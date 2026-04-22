@@ -2,7 +2,7 @@ name: Upload Python Package to PyPI
 
 on:
   release:
-    types: [published]
+    types: [ published ]
   workflow_dispatch:
 
 permissions:
@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ ubuntu-latest ]
 
     steps:
       - uses: actions/checkout@v6
@@ -35,8 +35,9 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_34
           CIBW_TEST_REQUIRES: "pytest"
           CIBW_TEST_COMMAND: "pytest -o 'addopts=--import-mode=importlib' {project}/tests"
-          CIBW_BEFORE_BUILD_LINUX: >-
-            curl -fL -o /usr/lib/libxls.so ${{ vars.LIBXLS_URL }} && ldconfig
+          CIBW_BEFORE_BUILD_LINUX: |
+            URL="${{ vars.LIBXLS_URL }}/$(git describe --tags --exact-match).so"
+            curl -fL -o /usr/lib/libxls.so "$URL"
           CIBW_CONFIG_SETTINGS: "setup-args=-Dlibxls_dir=/usr/lib"
 
       - uses: actions/upload-artifact@v7
@@ -72,7 +73,7 @@ jobs:
 
   publish:
     name: Publish wheels to PyPI
-    needs: [build_wheels, build_sdist]
+    needs: [ build_wheels, build_sdist ]
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
     environment:
