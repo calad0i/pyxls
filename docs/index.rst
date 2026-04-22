@@ -22,10 +22,6 @@ pyxls — Python bindings for XLS
 .. warning::
    ``pyxls`` is in early development. The API is not stable and may change without deprecation.
 
-.. warning::
-   The ``libxls.so`` library bundled with pyxls is built from official XLS releases. However, since the c APIs are not considered stable in XLS, replacing the bundled library with a custom build may lead to undefined behavior. Currently, pyxls release is done manually, which will likely not keep up with the pace of XLS development. CI builds are planned but no estimated timeline yet. The current version is built against XLS commit [`202e8d5ce`](https://github.com/google/xls/releases/tag/v0.0.0-9549-g202e8d5ce).
-
-
 
 pyxls exposes the `libxls.so`'s C API to python, mostly in 1:1 fashion, and some pythonic wrappers for some of them.
 
