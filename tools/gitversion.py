@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import subprocess
+import sys
 
 
-def get_git_version() -> str:
+def get_git_version(short=False):
     """Get the current git version description."""
     try:
         version = (
@@ -26,8 +27,11 @@ def get_git_version() -> str:
     except ValueError:
         # Fallback for when there are no tags (git describe returns only hash)
         ver = '0.0.0.dev0+g' + version
+    if short:
+        ver = ver.split('-', 1)[0].split('dev', 1)[0].strip('.')
     return ver
 
 
 if __name__ == '__main__':
-    print(get_git_version())
+    arg = sys.argv[1] if len(sys.argv) > 1 else None
+    print(get_git_version(short=arg == '--short'))

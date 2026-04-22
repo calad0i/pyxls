@@ -1,4 +1,4 @@
-exclude: '\.svg$|ap_types/|_version.py'
+exclude: '\.svg$|ap_types/|_version.py|^src/include/xls/public/'
 
 repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit

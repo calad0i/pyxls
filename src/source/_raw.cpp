@@ -14,10 +14,6 @@
 namespace nb = nanobind;
 using namespace nb::literals;
 
-// ============================================================
-// Batch inference helpers (from original _dummy.cpp)
-// ============================================================
-
 template <typename T>
 _Value value_from_array(const std::vector<T> &elements, size_t bit_count) {
     if (bit_count == 0)
@@ -255,9 +251,9 @@ NB_MODULE(raw, m) {
         m, "DslxInvocationCalleeDataArray"
     )
         .def(nb::init<>());
-    nb::class_<_DslxInvocationCalleeData>(
+    nb::class_<_DslxInvocationCalleeData>( // NOLINT(bugprone-unused-raii)
         m, "DslxInvocationCalleeData"
-    ); // NOLINT(bugprone-unused-raii)
+    );
     nb::class_<_DslxInvocationData>(m, "DslxInvocationData").def(nb::init<>());
     nb::class_<_DslxModuleMember>(m, "DslxModuleMember").def(nb::init<>());
     nb::class_<_DslxTypeDim>(m, "DslxTypeDim").def(nb::init<>());
