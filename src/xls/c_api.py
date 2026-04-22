@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Literal
 
@@ -10,6 +11,9 @@ if TYPE_CHECKING:
 
 from . import raw
 from ._wrap import auto_wrap, maybe_unwrap, maybe_wrap, register_wrapper, wrap_module
+
+# Path to the bundled DSLX standard library (shipped under xls/_blob/dslx_stdlib).
+DSLX_STDLIB_PATH = os.path.join(os.path.dirname(__file__), '_blob', 'dslx_stdlib')
 
 # ---------------------------------------------------------------------------
 # Enum alias mappings for text proto generation
@@ -985,7 +989,7 @@ def convert_dslx_to_ir(
     dslx_text: str,
     path: str,
     module_name: str,
-    dslx_stdlib_path: str,
+    dslx_stdlib_path: str = DSLX_STDLIB_PATH,
     additional_search_paths: list[str] | None = None,
 ) -> str:
     """Convert DSLX source text to IR."""
@@ -993,6 +997,19 @@ def convert_dslx_to_ir(
         dslx_text,
         path,
         module_name,
+        dslx_stdlib_path,
+        additional_search_paths or [],
+    )
+
+
+def convert_dslx_path_to_ir(
+    path: str,
+    dslx_stdlib_path: str = DSLX_STDLIB_PATH,
+    additional_search_paths: Sequence[str] | None = None,
+) -> str:
+    """Convert a DSLX file to IR."""
+    return raw.c_api.xls_convert_dslx_path_to_ir(
+        path,
         dslx_stdlib_path,
         additional_search_paths or [],
     )

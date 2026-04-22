@@ -7,6 +7,7 @@ from math import ceil, log2
 
 from xls import raw
 from xls._wrap import maybe_unwrap, maybe_wrap, register_wrapper, wrap_module
+from xls.c_api import DSLX_STDLIB_PATH
 
 
 @register_wrapper(raw.DslxTypecheckedModule)
@@ -36,7 +37,7 @@ class ImportData:
         self._raw = _raw
 
     @classmethod
-    def create(cls, dslx_stdlib_path: str, additional_search_paths: list[str] | None = None) -> ImportData:
+    def create(cls, dslx_stdlib_path: str = DSLX_STDLIB_PATH, additional_search_paths: list[str] | None = None) -> ImportData:
         """Create an ImportData with the given stdlib path."""
         result = raw.dslx.xls_dslx_import_data_create(dslx_stdlib_path, additional_search_paths or [])
         return maybe_wrap(result)

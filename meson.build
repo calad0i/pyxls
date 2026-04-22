@@ -26,6 +26,11 @@ _blob_dir = meson.current_source_dir() / 'src/xls/_blob'
 _blob_lib = _blob_dir / 'libxls.so'
 _blobs_install_dir = py.get_install_dir() / 'xls' / '_blob'
 
+install_subdir(
+  'src/xls/_blob/dslx_stdlib',
+  install_dir: _blobs_install_dir,
+)
+
 if get_option('skip_libxls')
   libxls_dep = declare_dependency(
     include_directories: include_directories('src/include'),
